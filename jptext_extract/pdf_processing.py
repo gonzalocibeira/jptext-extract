@@ -38,7 +38,7 @@ _JAPANESE_RANGES = [
 ]
 
 
-def _filter_non_japanese(text: str) -> str:
+def filter_non_japanese(text: str) -> str:
     """Normalize text to NFKC and keep only Japanese-relevant characters."""
     if not text:
         return ""
@@ -87,7 +87,7 @@ def _ocr_page(pdf_path: Path, page_number: int) -> str:
         LOGGER.warning("OCR failed on page %s: %s", page_number, exc)
         return ""
 
-    return _filter_non_japanese(text)
+    return filter_non_japanese(text)
 
 
 def extract_text_per_page(
@@ -122,7 +122,7 @@ def extract_text_per_page(
             if isinstance(element, LTTextContainer)
         ]
         raw_text = "".join(fragments)
-        normalized = _filter_non_japanese(raw_text)
+        normalized = filter_non_japanese(raw_text)
 
         if not normalized:
             normalized = _ocr_page(pdf_path, index)
@@ -132,4 +132,15 @@ def extract_text_per_page(
     return texts
 
 
-__all__ = ["extract_text_per_page"]
+def extract_text_from_txt(txt_path: Path) -> List[str]:
+    """Read and normalize Japanese text from a UTF-8 encoded plain text file."""
+
+    txt_path = txt_path.expanduser().resolve()
+    with txt_path.open("r", encoding="utf-8") as handle:
+        raw_text = handle.read()
+
+    normalized = filter_non_japanese(raw_text)
+    return [normalized]
+
+
+__all__ = ["extract_text_per_page", "extract_text_from_txt", "filter_non_japanese"]

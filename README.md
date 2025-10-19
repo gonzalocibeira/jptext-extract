@@ -5,6 +5,7 @@ JPText Extract is a small toolkit for extracting Japanese text from PDF document
 ## Features
 
 - **PDF text extraction** powered by `pdfminer.six`, with automatic normalization to retain only Japanese characters.
+- **Plain-text ingestion** for UTF-8 `.txt` files that reuses the same normalization pipeline as PDF pages.
 - **OCR fallback** using `pytesseract` and `pdf2image` when a PDF page lacks selectable text (requires external binaries).
 - **Vocabulary tokenization** via SudachiPy, deduplicating entries while preferring kanji forms when available.
 - **Interactive CLI workflow** for quickly turning a PDF into a CSV vocabulary file.
@@ -68,11 +69,13 @@ jptext-extract
 
 You will be prompted for:
 
-1. **PDF path** — enter the path to the Japanese-language PDF.
+1. **PDF/TXT path** — enter the path to the Japanese-language PDF or a UTF-8 encoded `.txt` file containing Japanese text.
 2. **Output directory** — the directory in which the CSV should be written.
 3. **CSV filename** — the filename (without path). The tool will append `.csv` if needed.
 
-While processing, the CLI reports progress for each page. When finished it writes a CSV containing one vocabulary term per row in UTF-8 encoding.
+While processing PDFs, the CLI reports progress for each page. Plain-text files are normalized as a single block before tokenization. When finished it writes a CSV containing one vocabulary term per row in UTF-8 encoding.
+
+> **Encoding note**: plain-text input must be UTF-8 encoded. If your text is in a different encoding, convert it to UTF-8 before running the CLI.
 
 Exit the program at any time with `Ctrl+C` or by entering `q` at the PDF prompt.
 
@@ -142,18 +145,22 @@ You can also call the modules directly in Python:
 ```python
 from pathlib import Path
 
-from jptext_extract.pdf_processing import extract_text_per_page
+from jptext_extract.pdf_processing import extract_text_from_txt, extract_text_per_page
 from jptext_extract.tokenizer import tokenize_and_deduplicate
 
 pdf_path = Path("/Users/you/Documents/japanese-article.pdf")
 pages = extract_text_per_page(pdf_path)
-entries = tokenize_and_deduplicate(pages)
+
+txt_path = Path("/Users/you/Documents/notes.txt")
+plain_text = extract_text_from_txt(txt_path)
+
+entries = tokenize_and_deduplicate(pages + plain_text)
 
 for reading, surface in entries[:10]:
     print(reading, surface)
 ```
 
-`extract_text_per_page` returns a list of normalized strings per page, automatically running OCR if a page has no embedded text. `tokenize_and_deduplicate` produces `(reading, surface)` pairs sorted by their reading.
+`extract_text_per_page` returns a list of normalized strings per page, automatically running OCR if a page has no embedded text. `extract_text_from_txt` returns a single normalized string for the entire text file. `tokenize_and_deduplicate` produces `(reading, surface)` pairs sorted by their reading.
 
 ## Troubleshooting
 
