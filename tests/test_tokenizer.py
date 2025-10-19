@@ -32,6 +32,8 @@ class StubMorpheme:
 @pytest.fixture
 def stub_tokenizer():
     noun = ("名詞", "普通名詞", "一般", "*", "*", "*")
+    particle = ("助詞", "係助詞", "*", "*", "*", "*")
+    verb = ("動詞", "普通", "*", "*", "*", "*")
 
     token_sequences = {
         "sample1": [
@@ -44,7 +46,12 @@ def stub_tokenizer():
         ],
         "sample3": [
             StubMorpheme("東京タワー", "トウキョウタワー", "東京タワー", noun),
-            StubMorpheme("タワー", "トウキョウタワー", "タワー", noun),
+            StubMorpheme("タワー", "タワー", "タワー", noun),
+        ],
+        "sample_phrase": [
+            StubMorpheme("猫", "ネコ", "猫", noun),
+            StubMorpheme("が", "ガ", "が", particle),
+            StubMorpheme("います", "イマス", "居る", verb),
         ],
     }
 
@@ -54,16 +61,21 @@ def stub_tokenizer():
     return types.SimpleNamespace(tokenize=tokenize)
 
 
-def test_tokenize_and_deduplicate_preserves_homophones(monkeypatch, stub_tokenizer):
+def test_tokenize_and_deduplicate_prefers_kanji_and_keeps_phrases(monkeypatch, stub_tokenizer):
     monkeypatch.setattr(tokenizer_module, "_get_tokenizer", lambda: stub_tokenizer)
 
-    result = tokenizer_module.tokenize_and_deduplicate(["sample1", "sample2", "sample3"])
+    result = tokenizer_module.tokenize_and_deduplicate(
+        ["sample1", "sample2", "sample3", "sample_phrase"]
+    )
 
     assert result == [
+        ("います", "居る"),
         ("かな", "仮名"),
-        ("かな", "かな"),
+        ("が", "が"),
+        ("たわー", "タワー"),
         ("とうきょうたわー", "東京タワー"),
-        ("とうきょうたわー", "タワー"),
+        ("ねこ", "猫"),
+        ("ねこがいます", "猫がいます"),
         ("はし", "橋"),
         ("はし", "端"),
     ]
