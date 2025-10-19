@@ -13,7 +13,7 @@ JPText Extract is a small toolkit for extracting Japanese text from PDF document
 
 - Python 3.9+
 - System dependencies for OCR support (optional but recommended):
-  - [Tesseract OCR](https://github.com/tesseract-ocr/tesseract) with the Japanese language pack (`tesseract-ocr-jpn` on many distributions).
+  - [Tesseract OCR](https://github.com/tesseract-ocr/tesseract) with the Japanese language pack (installed via Homebrew's `tesseract-lang` formula on macOS).
   - [Poppler](https://poppler.freedesktop.org/) utilities for `pdf2image` to render PDF pages.
 
 The package itself depends on:
@@ -23,10 +23,19 @@ The package itself depends on:
 - `pdf2image`
 - `SudachiPy`
 
-Install Poppler and Tesseract using your operating system's package manager. On Ubuntu/Debian for example:
+Install Poppler and Tesseract using your operating system's package manager. On macOS with [Homebrew](https://brew.sh/):
 
 ```bash
-sudo apt update && sudo apt install tesseract-ocr tesseract-ocr-jpn poppler-utils
+brew update
+brew install tesseract tesseract-lang poppler
+```
+
+The `tesseract-lang` formula installs additional language packs, including Japanese (`jpn`). After installation you can verify the
+language data is available:
+
+```bash
+ls /opt/homebrew/share/tessdata  # Apple Silicon default prefix
+ls /usr/local/share/tessdata     # Intel Mac default prefix
 ```
 
 ## Installation
@@ -49,10 +58,12 @@ This installs the `jptext-extract` console script.
 
 ### CLI workflow
 
-Run the interactive extractor by invoking the installed script:
+Run the interactive extractor by invoking the installed script (Homebrew typically places it on your `PATH`):
 
 ```bash
 jptext-extract
+# or use the full path if needed:
+/opt/homebrew/bin/jptext-extract
 ```
 
 You will be prompted for:
@@ -71,13 +82,13 @@ Exit the program at any time with `Ctrl+C` or by entering `q` at the PDF prompt.
 JPText Extract — Japanese vocabulary extractor
 Ctrl+C or type 'q' at the PDF prompt to exit.
 
-PDF path (or 'q' to quit): ~/Documents/japanese-article.pdf
-Output directory: ~/Desktop
+PDF path (or 'q' to quit): /Users/you/Documents/japanese-article.pdf
+Output directory: /Users/you/Desktop
 CSV filename (without path): article_vocab
 Processing page 1/5...
 Processing page 2/5...
 ...
-Wrote 128 entries to /home/user/Desktop/article_vocab.csv
+Wrote 128 entries to /Users/you/Desktop/article_vocab.csv
 処理が完了しました。
 ```
 
@@ -91,7 +102,7 @@ from pathlib import Path
 from jptext_extract.pdf_processing import extract_text_per_page
 from jptext_extract.tokenizer import tokenize_and_deduplicate
 
-pdf_path = Path("~/Documents/japanese-article.pdf").expanduser()
+pdf_path = Path("/Users/you/Documents/japanese-article.pdf")
 pages = extract_text_per_page(pdf_path)
 entries = tokenize_and_deduplicate(pages)
 
