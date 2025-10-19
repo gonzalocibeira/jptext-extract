@@ -95,13 +95,19 @@ To execute the CLI without installing the package, run it straight from the repo
    pip3 install --upgrade pip
    ```
 
-3. **Install the Python dependencies without installing the package itself.** These mirror the requirements declared in `pyproject.toml`:
+3. **Install the Python dependencies without installing the package itself.** These mirror the requirements declared in `pyproject.toml` and include the Sudachi dictionary data used by the tokenizer:
 
    ```bash
-   pip3 install pdfminer.six pytesseract pdf2image SudachiPy
+   pip3 install pdfminer.six pytesseract pdf2image sudachipy sudachidict_core
    ```
 
-   (Install any optional extras—such as Sudachi dictionaries—as needed.)
+   SudachiPy needs a dictionary symlinked into place before it can tokenize text. Link the Core dictionary you just installed (or substitute `full` if you prefer the Full dictionary):
+
+   ```bash
+   python3 -m sudachipy link -t core
+   ```
+
+   You can switch dictionaries later with the same command by passing `small`, `core`, or `full`.
 
 4. **Run the CLI from the repository root:**
 
