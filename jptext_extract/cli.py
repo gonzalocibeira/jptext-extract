@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 from typing import Callable
 
-from .pdf_processing import extract_text_per_page
+from .pdf_processing import extract_text_from_txt, extract_text_per_page
 from .tokenizer import tokenize_and_deduplicate
 
 
@@ -33,16 +33,21 @@ def _ensure_csv_suffix(filename: str) -> str:
 def main() -> None:
     """Run the interactive extraction workflow."""
     print("JPText Extract — Japanese vocabulary extractor")
-    print("Ctrl+C or type 'q' at the PDF prompt to exit.\n")
+    print("Ctrl+C or type 'q' at the file prompt to exit.\n")
 
     while True:
-        pdf_value = input("PDF path (or 'q' to quit): ").strip()
-        if pdf_value.lower() in {"q", "quit", "exit"}:
+        source_value = input("PDF or TXT path (or 'q' to quit): ").strip()
+        if source_value.lower() in {"q", "quit", "exit"}:
             print("終了します。")
             return
-        pdf_path = Path(pdf_value).expanduser()
-        if not pdf_path.exists():
-            print(f"PDF が見つかりません: {pdf_path}")
+        source_path = Path(source_value).expanduser()
+        if not source_path.exists():
+            print(f"ファイルが見つかりません: {source_path}")
+            continue
+
+        suffix = source_path.suffix.lower()
+        if suffix not in {".pdf", ".txt"}:
+            print("PDF または UTF-8 テキスト (.txt) を指定してください。")
             continue
 
         output_dir_value = _prompt(
@@ -60,14 +65,17 @@ def main() -> None:
         csv_path = output_dir / csv_filename
 
         try:
-            pages = extract_text_per_page(
-                pdf_path,
-                progress_callback=lambda current, total: print(
-                    f"Processing page {current}/{total}..."
-                ),
-            )
+            if suffix == ".pdf":
+                pages = extract_text_per_page(
+                    source_path,
+                    progress_callback=lambda current, total: print(
+                        f"Processing page {current}/{total}..."
+                    ),
+                )
+            else:
+                pages = extract_text_from_txt(source_path)
         except Exception as exc:  # pragma: no cover - CLI feedback
-            print(f"PDF processing failed: {exc}")
+            print(f"処理に失敗しました: {exc}")
             continue
 
         tokens = tokenize_and_deduplicate(pages)
