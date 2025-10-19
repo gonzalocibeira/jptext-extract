@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jptext-extract"
+version = "0.1.0"
+description = "Japanese PDF text extraction with Sudachi tokenization"
+authors = [
+    { name = "JPText Extract" }
+]
+requires-python = ">=3.9"
+dependencies = [
+    "pdfminer.six",
+    "pytesseract",
+    "pdf2image",
+    "SudachiPy",
+]
+
+[project.scripts]
+jptext-extract = "jptext_extract.cli:entry_point"
