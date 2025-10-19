@@ -76,6 +76,49 @@ While processing, the CLI reports progress for each page. When finished it write
 
 Exit the program at any time with `Ctrl+C` or by entering `q` at the PDF prompt.
 
+### Running from a source checkout
+
+To execute the CLI without installing the package, run it straight from the repository. On macOS with Homebrew, `python3`, and `pip3`, follow these steps:
+
+1. **Clone the repository (if you haven't already) and switch to it:**
+
+   ```bash
+   git clone https://github.com/your-org/jptext-extract.git
+   cd jptext-extract
+   ```
+
+2. **Create and activate a virtual environment:**
+
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
+   pip3 install --upgrade pip
+   ```
+
+3. **Install the Python dependencies without installing the package itself.** These mirror the requirements declared in `pyproject.toml` and include the Sudachi dictionary data used by the tokenizer:
+
+   ```bash
+   pip3 install pdfminer.six pytesseract pdf2image sudachipy sudachidict_core
+   ```
+
+   SudachiPy needs a dictionary symlinked into place before it can tokenize text. Link the Core dictionary you just installed (or substitute `full` if you prefer the Full dictionary):
+
+   ```bash
+   python3 -m sudachipy link -t core
+   ```
+
+   You can switch dictionaries later with the same command by passing `small`, `core`, or `full`.
+
+4. **Run the CLI from the repository root:**
+
+   ```bash
+   python3 -m jptext_extract.cli
+   # or
+   python3 jptext_extract/cli.py
+   ```
+
+This workflow keeps everything in an isolated environment, bypasses the `pip install` step that registers the console script, and is convenient when developing or testing local changes. When you're finished, exit the virtual environment with `deactivate`.
+
 ### Example session
 
 ```
