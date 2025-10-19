@@ -43,14 +43,15 @@ def tokenize_and_deduplicate(texts: Iterable[str]) -> List[Tuple[str, str]]:
 
     Returns:
         A list of tuples ``(hiragana_reading, canonical_surface)`` sorted by
-        the reading. Canonical surface retains kanji when available.
+        the reading and prioritising kanji surfaces before kana for each
+        reading. Canonical surface retains kanji when available and multiple
+        surfaces for the same reading are preserved.
     """
 
     tokenizer = _get_tokenizer()
     mode = SplitMode.C
 
-    by_reading: Dict[str, str] = {}
-    by_reading_pos: Dict[Tuple[str, Tuple[str, ...]], str] = {}
+    by_reading: Dict[str, Dict[str, int]] = {}
 
     for text in texts:
         if not text:
@@ -71,28 +72,21 @@ def tokenize_and_deduplicate(texts: Iterable[str]) -> List[Tuple[str, str]]:
             else:
                 surface = morpheme.surface()
 
-            key = (reading, pos[:2])
-            existing = by_reading_pos.get(key)
-            if existing is None:
-                by_reading_pos[key] = surface
-            else:
-                if _contains_kanji(surface) and not _contains_kanji(existing):
-                    by_reading_pos[key] = surface
-                elif len(surface) < len(existing):
-                    by_reading_pos[key] = surface
+            reading_surfaces = by_reading.setdefault(reading, {})
+            if surface not in reading_surfaces:
+                reading_surfaces[surface] = len(reading_surfaces)
 
-    for (reading, _pos), surface in by_reading_pos.items():
-        current = by_reading.get(reading)
-        if current is None:
-            by_reading[reading] = surface
-            continue
-        if _contains_kanji(surface) and not _contains_kanji(current):
-            by_reading[reading] = surface
-        elif len(surface) < len(current):
-            by_reading[reading] = surface
+    results: List[Tuple[str, str]] = []
+    for reading in sorted(by_reading.keys()):
+        surfaces = by_reading[reading]
+        ordered_surfaces = sorted(
+            surfaces.items(),
+            key=lambda item: (0 if _contains_kanji(item[0]) else 1, item[1]),
+        )
+        for surface, _order in ordered_surfaces:
+            results.append((reading, surface))
 
-    sorted_items = sorted(by_reading.items(), key=lambda item: item[0])
-    return sorted_items
+    return results
 
 
 __all__ = ["tokenize_and_deduplicate"]
